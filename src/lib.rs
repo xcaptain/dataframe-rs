@@ -1,7 +1,7 @@
 // code copied from https://github.com/rust-dataframe/discussion/issues/7
 #![feature(const_generics)]
 
-use frunk::hlist::{HList, HCons, HNil, Selector};
+use frunk::hlist::{HList, HCons, HNil, Selector, Sculptor};
 
 pub struct Column<T: Copy, const S: &'static str> {
     pub inner: Vec<T>
@@ -50,6 +50,14 @@ impl<Col: HList> DataFrame<Col> {
         Col: Selector<Column<T, S>, Index>,
     {
         Selector::get(&self.inner_cols)
+    }
+
+    pub fn get2<Index, T1: Copy, const S1: &'static str, T2: Copy, const S2: &'static str>(&self) -> &Col
+    where
+        Col: Sculptor<HCons<Column<T1, S1>, HCons<Column<T2, S2>, HNil>>, Index>,
+    {
+        let (_, remender) = Sculptor::sculpt(&self.inner_cols);
+        remender
     }
 
     pub fn schema(&self) -> Vec<&'static str>
@@ -108,5 +116,8 @@ mod tests {
         let df = df.add::<f32, "col2">(col2);
 
         assert_eq!(1, df.get_cell_by_idx::<i32, _, "col1">(0));
+
+        let cols = df.get2::<_, i32, "col1", f32, "col2">();
+        assert_eq!(1.1, cols.head.inner[0]);
     } 
 }
