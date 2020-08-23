@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 frunk = "0.3"
+frunk_core = "0.3"
